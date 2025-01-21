@@ -11,6 +11,18 @@ import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+import java.nio.file.Paths;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import org.opencv.highgui.HighGui;
 
 public class FaceRecognitionApp {
 
@@ -170,6 +182,55 @@ public class FaceRecognitionApp {
         Imgcodecs.imwrite(outputImagePath, image);
         System.out.println("Output image saved: " + outputImagePath);
     }
+    
+    
+    // Função para capturar imagem da câmera e salvar localmente
+    public void captureAndSaveImage(String name) {
+        VideoCapture camera = new VideoCapture(0); // Abrir a câmera
+        if (!camera.isOpened()) {
+            System.err.println("Error opening camera!");
+            return;
+        }
+
+        Mat frame = new Mat();
+
+        // Exibe a janela da câmera e coloca em primeiro plano
+        HighGui.namedWindow("Camera", HighGui.WINDOW_AUTOSIZE);
+       
+
+        // Iniciar captura e aguardar 2 segundos
+        long startTime = System.currentTimeMillis();
+        boolean capturing = true;
+
+        while (capturing) {
+            if (camera.read(frame)) {
+                // Exibir a imagem da câmera em tempo real
+                Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2RGB);
+                HighGui.imshow("Camera", frame); // Mostrar a janela da câmera
+                HighGui.waitKey(1); // Atualiza a janela com 1ms de delay
+            }
+
+            // Após 2 segundos, captura a imagem
+            if (System.currentTimeMillis() - startTime >= 2000) {
+                // Salva a imagem
+                String imagePath = IMAGES_DIR + "/" + name + ".jpg";
+                Imgcodecs.imwrite(imagePath, frame); // Salva a imagem
+                System.out.println("Image captured and saved to: " + imagePath);
+                capturing = false; // Encerra o loop após salvar a imagem
+            }
+        }
+
+        // Libera a câmera e fecha a janela
+        camera.release();
+        HighGui.destroyWindow("Camera"); // Fecha a janela específica
+    }
+
+
+
+
+
+
+
 
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -178,40 +239,11 @@ public class FaceRecognitionApp {
 
         FaceRecognitionApp app = new FaceRecognitionApp();
 
-        // Exemplo de inserção de uma face no banco de dados
-        String name = "nat";
-        String imagePath = "images/nat.jpg";
-
-        // Carregar a imagem
-        Mat image = Imgcodecs.imread(imagePath);
-        if (image.empty()) {
-            System.err.println("Error: Image not found or invalid.");
-            return;
-        }
-
-        // Detectar rostos na imagem
-        MatOfRect faces = new MatOfRect();
-        app.faceDetector.detectMultiScale(image, faces);
-
-        if (faces.toArray().length > 0) {
-            // Pegar o primeiro rosto detectado
-            Rect faceRect = faces.toArray()[0];
-            Mat face = new Mat(image, faceRect);
-
-            // Gerar os embeddings para o rosto
-            byte[] features = app.embeddingExtractor.extractEmbedding(face);
-            if (features != null) {
-                // Inserir a face no banco de dados
-                app.insertFace(name, imagePath, features);
-                System.out.println("Face successfully inserted into the database.");
-            } else {
-                System.err.println("Error: Failed to generate embedding for the face.");
-            }
-        } else {
-            System.err.println("No face detected in the image.");
-        }
-
-        app.processImages();
+        // Captura imagem da câmera e registra no banco
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter name for face registration: ");
+        String name = scanner.nextLine();
+        app.captureAndSaveImage(name);
     }
 }
 
