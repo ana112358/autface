@@ -297,12 +297,12 @@ public class FaceRecognitionApp {
 
             if (!scanner.hasNextInt()) { // Evita erro caso o usuário insira texto ao invés de número
                 System.out.println("Opção inválida! Digite um número de 1 a 4.");
-                scanner.next(); // Limpa a entrada inválida
+                scanner.next();
                 continue;
             }
 
             option = scanner.nextInt();
-            scanner.nextLine(); // Limpa o buffer
+            scanner.nextLine(); 
 
             switch (option) {
                 case 1:
@@ -341,7 +341,7 @@ public class FaceRecognitionApp {
 
     public static void main(String[] args) {
     	System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        FaceRecognitionApp app = new FaceRecognitionApp(); // Criando uma instância
+        FaceRecognitionApp app = new FaceRecognitionApp();
         app.initialize();
         app.run();
     }
