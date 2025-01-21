@@ -6,11 +6,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="D:/Users/natha/Downloads/opencv/build/java/opencv-4100.jar">
+	<classpathentry kind="lib" path="C:/Users/Ana Paula/Downloads/opencv/build/java/opencv-440.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="D:/Users/natha/Downloads/opencv/build/java/x64"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/Ana Paula/Downloads/opencv/build/java/x64"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/natha/Downloads/sqlite-jdbc-3.48.0.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Ana Paula/Downloads/sqlite-jdbc-3.48.0.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

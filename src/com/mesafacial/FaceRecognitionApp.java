@@ -1,6 +1,11 @@
 package com.mesafacial;
 
 import org.opencv.core.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.io.File;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
@@ -184,66 +189,161 @@ public class FaceRecognitionApp {
     }
     
     
-    // Função para capturar imagem da câmera e salvar localmente
+ // Função para capturar imagem da câmera e salvar localmente
     public void captureAndSaveImage(String name) {
-        VideoCapture camera = new VideoCapture(0); // Abrir a câmera
+        VideoCapture camera = new VideoCapture(0); // Abrir webcam
         if (!camera.isOpened()) {
-            System.err.println("Error opening camera!");
+            System.out.println("Erro ao acessar a câmera.");
             return;
         }
 
-        Mat frame = new Mat();
+        // Criar interface gráfica
+        JFrame frame = new JFrame("Captura de Imagem");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(640, 480);
+        frame.setLayout(new BorderLayout());
 
-        // Exibe a janela da câmera e coloca em primeiro plano
-        HighGui.namedWindow("Camera", HighGui.WINDOW_AUTOSIZE);
-       
+        JLabel cameraLabel = new JLabel();
+        frame.add(cameraLabel, BorderLayout.CENTER);
 
-        // Iniciar captura e aguardar 2 segundos
-        long startTime = System.currentTimeMillis();
-        boolean capturing = true;
+        JButton captureButton = new JButton("Capturar");
+        frame.add(captureButton, BorderLayout.SOUTH);
 
-        while (capturing) {
-            if (camera.read(frame)) {
-                // Exibir a imagem da câmera em tempo real
-                Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2RGB);
-                HighGui.imshow("Camera", frame); // Mostrar a janela da câmera
-                HighGui.waitKey(1); // Atualiza a janela com 1ms de delay
+        frame.setVisible(true);
+
+        // Thread para atualizar a imagem da câmera em tempo real
+        Thread cameraThread = new Thread(() -> {
+            Mat frameMat = new Mat();
+            while (camera.isOpened()) {
+                camera.read(frameMat);
+                if (!frameMat.empty()) {
+                    ImageIcon image = new ImageIcon(matToBufferedImage(frameMat));
+                    cameraLabel.setIcon(image);
+                }
+
+                // Pequeno atraso para reduzir o uso da CPU
+                try {
+                    Thread.sleep(33); // ~30 FPS
+                } catch (InterruptedException ignored) {}
             }
+        });
 
-            // Após 2 segundos, captura a imagem
-            if (System.currentTimeMillis() - startTime >= 2000) {
-                // Salva a imagem
-                String imagePath = IMAGES_DIR + "/" + name + ".jpg";
-                Imgcodecs.imwrite(imagePath, frame); // Salva a imagem
-                System.out.println("Image captured and saved to: " + imagePath);
-                capturing = false; // Encerra o loop após salvar a imagem
+        cameraThread.start();
+
+        // Quando o botão for clicado, salva a imagem e fecha a câmera
+        captureButton.addActionListener(e -> {
+            Mat frameMat = new Mat();
+            if (camera.read(frameMat)) {
+                File directory = new File("images/");
+                if (!directory.exists()) {
+                    directory.mkdir();
+                }
+                String filePath = "images/" + name + ".jpg";
+                Imgcodecs.imwrite(filePath, frameMat);
+                JOptionPane.showMessageDialog(frame, "Imagem salva em: " + filePath);
+
+                // Encerrar captura e fechar janela
+                camera.release();
+                frame.dispose();
+            } else {
+                JOptionPane.showMessageDialog(frame, "Erro ao capturar imagem!");
             }
-        }
-
-        // Libera a câmera e fecha a janela
-        camera.release();
-        HighGui.destroyWindow("Camera"); // Fecha a janela específica
+        });
     }
 
 
 
 
+    private BufferedImage matToBufferedImage(Mat matrix) {
+        int type = BufferedImage.TYPE_BYTE_GRAY;
+        if (matrix.channels() > 1) {
+            type = BufferedImage.TYPE_3BYTE_BGR;
+        }
+        int bufferSize = matrix.channels() * matrix.cols() * matrix.rows();
+        byte[] buffer = new byte[bufferSize];
+        matrix.get(0, 0, buffer);
+        BufferedImage image = new BufferedImage(matrix.cols(), matrix.rows(), type);
+        final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(buffer, 0, targetPixels, 0, buffer.length);
+        return image;
+    }
 
 
 
+
+    public void initialize() {
+        // Carrega a biblioteca OpenCV
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        
+        // Inicializa o banco de dados SQLite
+        initializeDatabase();
+        
+        // Carrega os modelos necessários (Agora chamados através da instância)
+        loadHaarCascade();
+        loadEmbeddingModel();
+    }
+
+    public void run() {
+        Scanner scanner = new Scanner(System.in);
+        int option = -1; 
+
+        do {
+            System.out.println("\nMenu de Reconhecimento Facial");
+            System.out.println("1. Capturar e registrar rosto");
+            System.out.println("2. Processar imagens para reconhecimento");
+            System.out.println("3. Listar rostos registrados");
+            System.out.println("4. Sair");
+            System.out.print("Escolha uma opção: ");
+
+            if (!scanner.hasNextInt()) { // Evita erro caso o usuário insira texto ao invés de número
+                System.out.println("Opção inválida! Digite um número de 1 a 4.");
+                scanner.next(); // Limpa a entrada inválida
+                continue;
+            }
+
+            option = scanner.nextInt();
+            scanner.nextLine(); // Limpa o buffer
+
+            switch (option) {
+                case 1:
+                    System.out.print("Digite o nome para registro: ");
+                    String name = scanner.nextLine().trim();
+                    if (!name.isEmpty()) {
+                        captureAndSaveImage(name);
+                    } else {
+                        System.out.println("Nome inválido! O registro foi cancelado.");
+                    }
+                    break;
+                case 2:
+                    processImages();
+                    break;
+                case 3:
+                    List<RegisteredFace> faces = getRegisteredFaces();
+                    if (faces.isEmpty()) {
+                        System.out.println("Nenhum rosto registrado.");
+                    } else {
+                        System.out.println("Rostos Registrados:");
+                        for (RegisteredFace face : faces) {
+                            System.out.println("- " + face.getName());
+                        }
+                    }
+                    break;
+                case 4:
+                    System.out.println("Encerrando o programa...");
+                    break;
+                default:
+                    System.out.println("Opção inválida! Tente novamente.");
+            }
+        } while (option != 4);
+
+        scanner.close();
+    }
 
     public static void main(String[] args) {
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-
-        System.out.println("OpenCV library loaded successfully.");
-
-        FaceRecognitionApp app = new FaceRecognitionApp();
-
-        // Captura imagem da câmera e registra no banco
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter name for face registration: ");
-        String name = scanner.nextLine();
-        app.captureAndSaveImage(name);
+    	System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        FaceRecognitionApp app = new FaceRecognitionApp(); // Criando uma instância
+        app.initialize();
+        app.run();
     }
 }
 
