@@ -1,0 +1,39 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "FaceRecognitionApp",
+            "request": "launch",
+            "mainClass": "com.mesafacial.FaceRecognitionApp",
+            "projectName": "autface_6102c19a"
+        },
+        {
+            "type": "java",
+            "name": "FaceRecognitionApp",
+            "request": "launch",
+            "mainClass": "com.mesafacial.FaceRecognitionApp",
+            "projectName": "autface"
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "src.com.mesafacial.FaceRecognitionApp",
+            "vmArgs": "-Djava.library.path=lib/opencv/build/java/x64 -Dfile.encoding=UTF-8 -classpath \"resources\"",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "java",
+            "name": "FaceRecognitionApp",
+            "request": "launch",
+            "mainClass": "src.com.mesafacial.FaceRecognitionApp",
+            "projectName": "MesaFacial2",
+            "vmArgs": "-Djava.library.path=lib/opencv/build/java/x64 -Dfile.encoding=UTF-8 -classpath \"resources\"",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
