@@ -21,55 +21,55 @@ import java.util.Scanner;
 
 public class FaceRecognitionApp {
 
-    // Classe Camera
+    // Classe responsável por capturar quadros da câmera em tempo real.
     static class Camera {
         private VideoCapture camera;
 
         public Camera() {
-            camera = new VideoCapture(0);
+            camera = new VideoCapture(0);// Inicializa a câmera na posição padrão (0)
         }
 
         public boolean estaAberta() {
-            return camera.isOpened();
+            return camera.isOpened();// Verifica se a câmera está aberta
         }
 
         public void liberar() {
-            camera.release();
+            camera.release();// Libera a câmera ao finalizar
         }
 
         public Mat capturarQuadro() {
             Mat quadro = new Mat();
             if (camera.isOpened()) {
-                camera.read(quadro);
+                camera.read(quadro);// Captura um quadro da câmera
             }
             return quadro;
         }
     }
 
-    // Classe DetectadorDeRosto
+    // Classe responsável por detectar rostos em um quadro de imagem.
     static class DetectadorDeRosto {
         private CascadeClassifier detectorDeRosto;
 
         public DetectadorDeRosto(String caminhoModelo) {
-            detectorDeRosto = new CascadeClassifier(caminhoModelo);
+            detectorDeRosto = new CascadeClassifier(caminhoModelo); // Carrega o modelo Haarcascade para detecção de rostos
         }
 
         public MatOfRect detectarRostos(Mat quadro) {
             MatOfRect rostos = new MatOfRect();
-            detectorDeRosto.detectMultiScale(quadro, rostos);
+            detectorDeRosto.detectMultiScale(quadro, rostos); // Detecta rostos no quadro fornecido
             return rostos;
         }
     }
 
-    // Classe SalvadorDeImagem
+    // Classe responsável por salvar imagens capturadas e armazenar o hash da imagem no banco de dados.
     static class SalvadorDeImagem {
 
         public static void salvarImagem(Mat quadro, String nomeUsuario) {
-            File diretorio = new File("imagens");
+            File diretorio = new File("images");
             if (!diretorio.exists()) {
                 diretorio.mkdirs();
             }
-            String caminhoArquivo = "imagens/" + nomeUsuario + ".jpg";
+            String caminhoArquivo = "images/" + nomeUsuario + ".jpg";
             Imgcodecs.imwrite(caminhoArquivo, quadro);
             System.out.println("Imagem salva como: " + new File(caminhoArquivo).getAbsolutePath());
         }
@@ -80,7 +80,7 @@ public class FaceRecognitionApp {
                 quadro.get(0, 0, imagemBytes);
 
                 // Gera o hash SHA-256
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                MessageDigest digest = MessageDigest.getInstance("SHA-256"); 
                 byte[] hashBytes = digest.digest(imagemBytes);
 
                 // Converte para string hexadecimal
@@ -162,7 +162,7 @@ public class FaceRecognitionApp {
         OuvinteDeCliqueDeMouse ouvinteCliqueMouse = new OuvinteDeCliqueDeMouse();
 
         // Exibe o callback do mouse apenas uma vez, fora do loop de captura
-        HighGui.setMouseCallback("Câmera - Clique no botão para capturar", (event, x, y, flags, userdata) -> {
+      /*  HighGui.setMouseCallback("Câmera - Clique no botão para capturar", (event, x, y, flags, userdata) -> {
             if (event == HighGui.EVENT_LBUTTONDOWN) {
                 int larguraBotao = 200, alturaBotao = 50;
                 Point topoEsquerdoBotao = new Point(camera.capturarQuadro().cols() - larguraBotao - 10, camera.capturarQuadro().rows() - alturaBotao - 10);
@@ -172,7 +172,7 @@ public class FaceRecognitionApp {
                     ouvinteCliqueMouse.setCapturaSolicitada(true);
                 }
             }
-        });
+        });*/
 
         // Exibindo o loop da câmera e a captura ao clicar no botão
         while (true) {
@@ -203,7 +203,7 @@ public class FaceRecognitionApp {
                 }
 
                 // Verifica o clique do mouse para capturar a imagem
-                if (ouvinteCliqueMouse.isCapturaSolicitada()) {
+                if (ouvinteCliqueMouse.isCapturaSolicitada()) { // Comente aqui para gerar o hash e ver salvando no banco de dados
                     // Captura a imagem
                     SalvadorDeImagem.salvarImagem(quadro, nomeUsuario);
 
